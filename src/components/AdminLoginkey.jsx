@@ -20,7 +20,7 @@ const LoginPage = () => {
 
     try {
       // Send key to backend for verification
-      const response = await fetch("http://localhost:4534/api/admin/verify-key", {
+      const response = await fetch("https://backend-final-project1-production.up.railway.app/api/admin/verify-key", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

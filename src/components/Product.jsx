@@ -117,7 +117,7 @@ export default function AdminProducts() {
                         src={
                           p.image?.startsWith("http") 
                             ? p.image 
-                            : `http://localhost:4534${p.image || ""}`
+                            : `https://backend-final-project1-production.up.railway.app/${p.image || ""}`
                         }
                         alt={p.name}
                         className="w-16 h-16 object-cover rounded"

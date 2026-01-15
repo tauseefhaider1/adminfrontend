@@ -10,7 +10,7 @@ export default function AdminProducts() {
   const fetchProducts = async () => {
     try {
       console.log("Fetching products...");
-      const res = await adminApi.get("/product");
+      const res = await adminApi.get("/api/product");
       console.log("Products API response:", res.data);
       
       let productsList = [];

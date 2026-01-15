@@ -1,4 +1,3 @@
-// CombinedAdminProducts.jsx
 import { useState, useEffect } from "react";
 import adminApi from "../api/Azios";
 
@@ -24,25 +23,41 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [updatingProduct, setUpdatingProduct] = useState(false);
 
+  const BACKEND_URL = "https://backend-final-project1-production.up.railway.app";
+
   // Fetch products
   const fetchProducts = async () => {
     try {
+      console.log("Fetching products...");
       const res = await adminApi.get("/api/product");
-      console.log("Products response:", res.data);
+      console.log("Products API response:", res.data);
       
       let productsList = [];
+      
+      // Handle multiple response formats
       if (Array.isArray(res.data)) {
         productsList = res.data;
       } else if (Array.isArray(res.data?.products)) {
         productsList = res.data.products;
       } else if (Array.isArray(res.data?.data)) {
         productsList = res.data.data;
+      } else if (res.data?.success && Array.isArray(res.data?.data)) {
+        productsList = res.data.data;
+      } else if (Array.isArray(res.data?.data?.products)) {
+        productsList = res.data.data.products;
       }
       
+      console.log("Processed products:", productsList);
       setProducts(productsList);
+      
+      if (productsList.length === 0) {
+        console.warn("No products found in response");
+      }
+      
     } catch (err) {
       console.error("Fetch products error:", err);
-      setError("Failed to load products");
+      setError("Failed to load products: " + (err.response?.data?.message || err.message));
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -66,6 +81,7 @@ export default function AdminProducts() {
       setCategories(categoriesData);
     } catch (err) {
       console.error("Fetch categories error:", err);
+      setError("Failed to load categories");
     } finally {
       setCategoriesLoading(false);
     }
@@ -88,7 +104,7 @@ export default function AdminProducts() {
     const file = e.target.files[0];
     if (file) {
       if (!file.type.match("image.*")) {
-        setError("Please select an image file");
+        setError("Please select an image file (PNG, JPG, JPEG, GIF)");
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
@@ -139,8 +155,9 @@ export default function AdminProducts() {
     setError("");
 
     try {
+      // Validation
       if (!formData.name.trim() || !formData.price || !formData.category) {
-        setError("Please fill in all required fields");
+        setError("Please fill in all required fields (Name, Price, Category)");
         setAddingProduct(false);
         return;
       }
@@ -171,20 +188,29 @@ export default function AdminProducts() {
       if (formData.originalPrice) formDataToSend.append("originalPrice", formData.originalPrice);
       formDataToSend.append("topRated", formData.topRated);
 
-      const res = await adminApi.post("/product", formDataToSend, {
+      console.log("Adding product...", {
+        name: formData.name,
+        price: price,
+        category: formData.category,
+        image: imageFile.name
+      });
+
+      const res = await adminApi.post("/api/product", formDataToSend, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       
-      if (res.data.success) {
+      console.log("Add product response:", res.data);
+      
+      if (res.data.success || res.status === 201) {
         alert("✅ Product added successfully!");
         resetForm();
-        fetchProducts();
+        await fetchProducts();
       } else {
         setError(res.data.message || "Failed to add product");
       }
     } catch (err) {
       console.error("Add product error:", err);
-      setError(err.response?.data?.message || "Something went wrong");
+      setError(err.response?.data?.message || err.message || "Something went wrong");
     } finally {
       setAddingProduct(false);
     }
@@ -196,6 +222,7 @@ export default function AdminProducts() {
     setError("");
 
     try {
+      // Validation
       if (!formData.name.trim() || !formData.price || !formData.category) {
         setError("Please fill in all required fields");
         setUpdatingProduct(false);
@@ -226,20 +253,20 @@ export default function AdminProducts() {
       if (formData.originalPrice) formDataToSend.append("originalPrice", formData.originalPrice);
       formDataToSend.append("topRated", formData.topRated);
 
-      const res = await adminApi.put(`/product/${editingProduct._id}`, formDataToSend, {
+      const res = await adminApi.put(`/api/product/${editingProduct._id}`, formDataToSend, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       
-      if (res.data.success) {
+      if (res.data.success || res.status === 200) {
         alert("✅ Product updated successfully!");
         resetForm();
-        fetchProducts();
+        await fetchProducts();
       } else {
         setError(res.data.message || "Failed to update product");
       }
     } catch (err) {
       console.error("Update product error:", err);
-      setError(err.response?.data?.message || "Something went wrong");
+      setError(err.response?.data?.message || err.message || "Something went wrong");
     } finally {
       setUpdatingProduct(false);
     }
@@ -247,8 +274,10 @@ export default function AdminProducts() {
 
   const editProduct = async (id) => {
     try {
-      const res = await adminApi.get(`/product/${id}`);
-      const product = res.data.product;
+      const res = await adminApi.get(`/api/product/${id}`);
+      const product = res.data.product || res.data.data || res.data;
+      
+      console.log("Product data for edit:", product);
       
       setEditingProduct(product);
       setFormData({
@@ -265,7 +294,7 @@ export default function AdminProducts() {
       if (product.image) {
         const fullImageUrl = product.image.startsWith("http") 
           ? product.image 
-          : `http://localhost:4534${product.image}`;
+          : `${BACKEND_URL}${product.image.startsWith("/") ? "" : "/"}${product.image}`;
         setImagePreview(fullImageUrl);
         setImageFile("existing"); // Mark as existing image
       }
@@ -274,18 +303,18 @@ export default function AdminProducts() {
       document.getElementById("product-form-section")?.scrollIntoView({ behavior: "smooth" });
     } catch (err) {
       console.error("Fetch product for edit error:", err);
-      setError("Failed to load product for editing");
+      setError("Failed to load product for editing: " + (err.response?.data?.message || err.message));
     }
   };
 
   const deleteProduct = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
-      await adminApi.delete(`/product/${id}`);
+      await adminApi.delete(`/api/product/${id}`);
       setProducts(products.filter(p => p._id !== id));
-      alert("Product deleted successfully");
+      alert("✅ Product deleted successfully!");
     } catch (err) {
-      alert("Delete failed");
+      alert("❌ Delete failed: " + (err.response?.data?.message || "Please try again"));
     }
   };
 
@@ -300,26 +329,47 @@ export default function AdminProducts() {
     resetForm();
   };
 
+  if (loading) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4">Admin Products</h1>
+        <div className="text-center py-10">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-2">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Admin Products Management</h1>
+      <h1 className="text-2xl font-bold mb-4">Admin Products Management</h1>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+          <button 
+            onClick={() => setError("")} 
+            className="float-right text-red-800 font-bold"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* ADD/EDIT PRODUCT FORM */}
       <div id="product-form-section" className="bg-gray-50 p-6 rounded-lg border mb-8">
         <h2 className="text-xl font-bold mb-4">
           {editingProduct ? `Edit Product: ${editingProduct.name}` : "Add New Product"}
         </h2>
-        
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Product Name *</label>
+              <label className="block text-sm font-medium mb-1">
+                Product Name <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 name="name"
@@ -333,7 +383,9 @@ export default function AdminProducts() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Price (Rs) *</label>
+              <label className="block text-sm font-medium mb-1">
+                Price (Rs) <span className="text-red-500">*</span>
+              </label>
               <input
                 type="number"
                 name="price"
@@ -380,7 +432,9 @@ export default function AdminProducts() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Category *</label>
+              <label className="block text-sm font-medium mb-1">
+                Category <span className="text-red-500">*</span>
+              </label>
               <select
                 name="category"
                 value={formData.category}
@@ -392,14 +446,19 @@ export default function AdminProducts() {
                 <option value="">Select a category</option>
                 {categories.map((cat) => (
                   <option key={cat._id} value={cat._id}>
-                    {cat.title}
+                    {cat.title || cat.name}
                   </option>
                 ))}
               </select>
+              {categoriesLoading && (
+                <p className="text-xs text-gray-500 mt-1">Loading categories...</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Stock Status *</label>
+              <label className="block text-sm font-medium mb-1">
+                Stock Status <span className="text-red-500">*</span>
+              </label>
               <select
                 name="stockStatus"
                 value={formData.stockStatus}
@@ -412,10 +471,6 @@ export default function AdminProducts() {
                 <option value="limited">Limited Stock</option>
                 <option value="out">Out of Stock</option>
               </select>
-            </div>
-
-            <div>
-        
             </div>
 
             <div className="flex items-center">
@@ -435,7 +490,7 @@ export default function AdminProducts() {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1">
-                Product Image {!editingProduct && "*"}
+                Product Image {!editingProduct && <span className="text-red-500">*</span>}
               </label>
               <div className="space-y-3">
                 {imagePreview ? (
@@ -473,7 +528,7 @@ export default function AdminProducts() {
                     onChange={handleImageChange}
                     className="hidden"
                     disabled={addingProduct || updatingProduct}
-                    required={!editingProduct} // Required only for new products
+                    required={!editingProduct}
                   />
                   <label htmlFor="image" className="cursor-pointer block">
                     <div className="text-gray-600">
@@ -485,7 +540,7 @@ export default function AdminProducts() {
                           ? "Click to change image" 
                           : "Click to upload product image"}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 5MB</p>
+                      <p className="text-xs text-gray-500 mt-1">PNG, JPG, JPEG, GIF up to 5MB</p>
                       {editingProduct && !imagePreview && (
                         <p className="text-xs text-yellow-600 mt-1">Leave empty to keep current image</p>
                       )}
@@ -541,14 +596,20 @@ export default function AdminProducts() {
 
       {/* PRODUCTS TABLE */}
       <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">All Products ({products.length})</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">All Products ({products.length})</h2>
+          <button
+            onClick={() => {
+              fetchProducts();
+              fetchCategories();
+            }}
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm"
+          >
+            Refresh Data
+          </button>
+        </div>
         
-        {loading ? (
-          <div className="text-center py-10">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2">Loading products...</p>
-          </div>
-        ) : products.length === 0 ? (
+        {products.length === 0 ? (
           <div className="text-center py-10 bg-gray-50 rounded-lg border">
             <p className="text-gray-500">No products found. Add your first product above.</p>
           </div>
@@ -560,8 +621,8 @@ export default function AdminProducts() {
                   <th className="border p-3 text-left">Image</th>
                   <th className="border p-3 text-left">Name</th>
                   <th className="border p-3 text-left">Price</th>
-                  <th className="border p-3 text-left">Category</th>
                   <th className="border p-3 text-left">Stock</th>
+                  <th className="border p-3 text-left">Category</th>
                   <th className="border p-3 text-left">Actions</th>
                 </tr>
               </thead>
@@ -570,7 +631,11 @@ export default function AdminProducts() {
                   <tr key={p._id} className="hover:bg-gray-50">
                     <td className="border p-3">
                       <img
-                        src={p.image?.startsWith("http") ? p.image : `http://localhost:4534${p.image || ""}`}
+                        src={
+                          p.image?.startsWith("http") 
+                            ? p.image 
+                            : `${BACKEND_URL}${p.image?.startsWith("/") ? "" : "/"}${p.image || ""}`
+                        }
                         alt={p.name}
                         className="w-16 h-16 object-cover rounded"
                         onError={(e) => {
@@ -596,7 +661,7 @@ export default function AdminProducts() {
                       <div className="font-medium">Rs {p.price?.toLocaleString() || "0"}</div>
                       {p.originalPrice && p.originalPrice > p.price && (
                         <div className="text-sm text-gray-500 line-through">
-                          Rs {p.originalPrice.toLocaleString()}
+                          Rs {p.originalPrice?.toLocaleString()}
                         </div>
                       )}
                       {p.discount > 0 && (
@@ -606,13 +671,12 @@ export default function AdminProducts() {
                       )}
                     </td>
                     <td className="border p-3">
-                      {p.category?.title || "Uncategorized"}
-                    </td>
-                    <td className="border p-3">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        p.stockStatus === "in" ? "bg-green-100 text-green-800" :
-                        p.stockStatus === "limited" ? "bg-yellow-100 text-yellow-800" :
-                        "bg-red-100 text-red-800"
+                        p.stockStatus === "in"
+                          ? "bg-green-100 text-green-800"
+                          : p.stockStatus === "limited"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-red-100 text-red-800"
                       }`}>
                         {p.stockStatus === "in" ? "In Stock" : 
                          p.stockStatus === "limited" ? "Limited" : 
@@ -620,9 +684,17 @@ export default function AdminProducts() {
                       </span>
                     </td>
                     <td className="border p-3">
-                      <div className="flex items-center">
-                        <span className="text-yellow-500 mr-1">★</span>
-                      </div>
+                      {p.category ? (
+                        typeof p.category === "object" ? (
+                          <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            {p.category.title || p.category.name}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-500">ID: {p.category}</span>
+                        )
+                      ) : (
+                        <span className="text-xs text-gray-400">No category</span>
+                      )}
                     </td>
                     <td className="border p-3 space-x-2">
                       <button
@@ -644,6 +716,35 @@ export default function AdminProducts() {
             </table>
           </div>
         )}
+      </div>
+      
+      {/* Debug Info */}
+      <div className="mt-8 p-4 bg-gray-50 rounded-lg border text-sm">
+        <h3 className="font-medium mb-2">Debug Information:</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <strong>Products Count:</strong> {products.length}
+          </div>
+          <div>
+            <strong>Categories Count:</strong> {categories.length}
+          </div>
+          <div>
+            <strong>Backend:</strong> {BACKEND_URL}
+          </div>
+          <div>
+            <button
+              onClick={() => {
+                console.log("Current products:", products);
+                console.log("Current categories:", categories);
+                fetchProducts();
+                fetchCategories();
+              }}
+              className="text-blue-600 hover:underline"
+            >
+              Refresh & Log
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

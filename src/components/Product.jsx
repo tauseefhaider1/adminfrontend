@@ -113,19 +113,16 @@ export default function AdminProducts() {
                 {products.map((p) => (
                   <tr key={p._id} className="hover:bg-gray-50">
                     <td className="border p-3">
-                      <img
-                        src={
-                          p.image?.startsWith("http") 
-                            ? p.image 
-                            : `https://backend-final-project1-production.up.railway.app/${p.image || ""}`
-                        }
-                        alt={p.name}
-                        className="w-16 h-16 object-cover rounded"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "https://via.placeholder.com/64?text=No+Image";
-                        }}
-                      />
+                    <img
+  src={p.image?.startsWith("http") ? p.image : `https://backend-final-project1-production.up.railway.app${p.image || ""}`}
+  alt={p.name}
+  className="w-16 h-16 object-cover rounded"
+  onError={(e) => {
+    e.target.onerror = null;
+    e.target.src = "https://via.placeholder.com/64?text=No+Image";
+  }}
+/>
+
                     </td>
                     <td className="border p-3">
                       <div className="font-medium">{p.name}</div>

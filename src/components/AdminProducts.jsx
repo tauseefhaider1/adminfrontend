@@ -635,7 +635,6 @@ export default function AdminProducts() {
                     onChange={handleImageChange}
                     className="hidden"
                     disabled={addingProduct || updatingProduct}
-                    required={!editingProduct}
                   />
                   <label htmlFor="image" className="cursor-pointer block">
                     <div className="text-gray-600">

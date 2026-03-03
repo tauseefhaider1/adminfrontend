@@ -9,20 +9,24 @@ const AdminCategories = () => {
 
   const fetchCategories = async () => {
     try {
-      const data = await getCategories(); // ✅ FIX HERE
-      setCategories(data.categories);     // ✅ AND HERE
+      const data = await getCategories();
+      // data has categories array inside it
+      setCategories(data.categories);
     } catch (err) {
-      console.error("Failed to load categories", err);
+      console.log("could not load categories:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  // load categories when component mounts
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) {
+    return <p>Loading categories...</p>;
+  }
 
   return (
     <div className="space-y-6">

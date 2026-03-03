@@ -9,15 +9,15 @@ export default function AdminProducts() {
 
   const fetchProducts = async () => {
     try {
-      console.log("Fetching products...");
+      console.log("fetching products...");
       const res = await adminApi.get("/api/product");
-      console.log("Products API response:", res.data);
+      console.log("products api response:", res.data);
       
       let productsList = [];
       
-      // Handle multiple response formats
+      // handle different response formats
       if (Array.isArray(res.data)) {
-        // Direct array response
+        // direct array response
         productsList = res.data;
       } else if (Array.isArray(res.data?.products)) {
         // {products: [...]}
@@ -33,16 +33,16 @@ export default function AdminProducts() {
         productsList = res.data.data.products;
       }
       
-      console.log("Processed products:", productsList);
+      console.log("processed products:", productsList);
       setProducts(productsList);
       
       if (productsList.length === 0) {
-        console.warn("No products found in response");
+        console.log("no products found");
       }
       
     } catch (err) {
-      console.error("Fetch products error:", err);
-      setError("Failed to load products: " + (err.response?.data?.message || err.message));
+      console.log("fetch products error:", err);
+      setError("could not load products: " + (err.response?.data?.message || err.message));
       setProducts([]);
     } finally {
       setLoading(false);
@@ -54,24 +54,24 @@ export default function AdminProducts() {
   }, []);
 
   const deleteProduct = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    if (!window.confirm("are you sure you want to delete this product?")) return;
     
     try {
       await adminApi.delete(`/product/${id}`);
       setProducts(products.filter((p) => p._id !== id));
-      alert("Product deleted successfully!");
+      alert("product deleted!");
     } catch (err) {
-      alert("Delete failed: " + (err.response?.data?.message || "Please try again"));
+      alert("delete failed: " + (err.response?.data?.message || "please try again"));
     }
   };
 
   if (loading) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Admin Products</h1>
+        <h1 className="text-2xl font-bold mb-4">admin products</h1>
         <div className="text-center py-10">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2">Loading products...</p>
+          <p className="mt-2">loading products...</p>
         </div>
       </div>
     );
@@ -79,7 +79,7 @@ export default function AdminProducts() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Admin Products</h1>
+      <h1 className="text-2xl font-bold mb-4">admin products</h1>
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -90,39 +90,38 @@ export default function AdminProducts() {
       <AdminAddProduct onAdded={fetchProducts} />
 
       <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">All Products ({products.length})</h2>
+        <h2 className="text-xl font-semibold mb-4">all products ({products.length})</h2>
         
         {products.length === 0 ? (
           <div className="text-center py-10 bg-gray-50 rounded-lg border">
-            <p className="text-gray-500">No products found. Add your first product above.</p>
+            <p className="text-gray-500">no products yet. add your first one above.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="border p-3 text-left">Image</th>
-                  <th className="border p-3 text-left">Name</th>
-                  <th className="border p-3 text-left">Price</th>
-                  <th className="border p-3 text-left">Stock</th>
-                  <th className="border p-3 text-left">Category</th>
-                  <th className="border p-3 text-left">Actions</th>
+                  <th className="border p-3 text-left">image</th>
+                  <th className="border p-3 text-left">name</th>
+                  <th className="border p-3 text-left">price</th>
+                  <th className="border p-3 text-left">stock</th>
+                  <th className="border p-3 text-left">category</th>
+                  <th className="border p-3 text-left">actions</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((p) => (
                   <tr key={p._id} className="hover:bg-gray-50">
                     <td className="border p-3">
-                    <img
-  src={p.image?.startsWith("http") ? p.image : `https://backend-final-project1-production.up.railway.app${p.image || ""}`}
-  alt={p.name}
-  className="w-16 h-16 object-cover rounded"
-  onError={(e) => {
-    e.target.onerror = null;
-    e.target.src = "https://via.placeholder.com/64?text=No+Image";
-  }}
-/>
-
+                      <img
+                        src={p.image?.startsWith("http") ? p.image : `http://localhost:4534${p.image || ""}`}
+                        alt={p.name}
+                        className="w-16 h-16 object-cover rounded"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "https://via.placeholder.com/64?text=No+Image";
+                        }}
+                      />
                     </td>
                     <td className="border p-3">
                       <div className="font-medium">{p.name}</div>
@@ -133,10 +132,10 @@ export default function AdminProducts() {
                       )}
                     </td>
                     <td className="border p-3 font-medium">
-                      Rs {p.price?.toLocaleString() || "0"}
+                      ₹{p.price?.toLocaleString() || "0"}
                       {p.originalPrice && p.originalPrice > p.price && (
                         <div className="text-sm text-gray-500 line-through">
-                          Rs {p.originalPrice?.toLocaleString()}
+                          ₹{p.originalPrice?.toLocaleString()}
                         </div>
                       )}
                     </td>
@@ -148,9 +147,9 @@ export default function AdminProducts() {
                           ? "bg-yellow-100 text-yellow-800"
                           : "bg-red-100 text-red-800"
                       }`}>
-                        {p.stockStatus === "in" ? "In Stock" : 
-                         p.stockStatus === "limited" ? "Limited" : 
-                         "Out of Stock"}
+                        {p.stockStatus === "in" ? "in stock" : 
+                         p.stockStatus === "limited" ? "limited" : 
+                         "out of stock"}
                       </span>
                     </td>
                     <td className="border p-3">
@@ -160,18 +159,18 @@ export default function AdminProducts() {
                             {p.category.title || p.category.name}
                           </span>
                         ) : (
-                          <span className="text-xs text-gray-500">ID: {p.category}</span>
+                          <span className="text-xs text-gray-500">id: {p.category}</span>
                         )
                       ) : (
-                        <span className="text-xs text-gray-400">No category</span>
+                        <span className="text-xs text-gray-400">no category</span>
                       )}
                     </td>
                     <td className="border p-3">
                       <button
                         onClick={() => deleteProduct(p._id)}
-                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors text-sm"
                       >
-                        Delete
+                        delete
                       </button>
                     </td>
                   </tr>
@@ -182,28 +181,28 @@ export default function AdminProducts() {
         )}
       </div>
       
-      {/* Debug Info */}
+      {/* debug info */}
       <div className="mt-8 p-4 bg-gray-50 rounded-lg border text-sm">
-        <h3 className="font-medium mb-2">Debug Information:</h3>
+        <h3 className="font-medium mb-2">debug info:</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <strong>Products Count:</strong> {products.length}
+            <strong>products:</strong> {products.length}
           </div>
           <div>
-            <strong>Backend:</strong> http://localhost:4534
+            <strong>backend:</strong> http://localhost:4534
           </div>
           <div>
-            <strong>Endpoint:</strong> /product
+            <strong>endpoint:</strong> /product
           </div>
           <div>
             <button
               onClick={() => {
-                console.log("Current products:", products);
+                console.log("current products:", products);
                 fetchProducts();
               }}
               className="text-blue-600 hover:underline"
             >
-              Refresh & Log
+              refresh & log
             </button>
           </div>
         </div>

@@ -10,13 +10,14 @@ export default function AdminRoute({ children }) {
       try {
         const adminKey = localStorage.getItem("admin_key");
         
+        // if no key in storage, they're not logged in
         if (!adminKey) {
           setIsAdmin(false);
           setLoading(false);
           return;
         }
 
-        // Verify with backend
+        // check with backend if key is valid
         const response = await fetch("/api/admin/check-auth", {
           headers: {
             "Authorization": `Bearer ${adminKey}`,
@@ -26,12 +27,13 @@ export default function AdminRoute({ children }) {
         if (response.ok) {
           setIsAdmin(true);
         } else {
+          // key is invalid or expired
           localStorage.removeItem("admin_key");
           localStorage.removeItem("admin_authenticated");
           setIsAdmin(false);
         }
       } catch (error) {
-        console.error("Auth check failed:", error);
+        console.log("auth check failed:", error);
         setIsAdmin(false);
       } finally {
         setLoading(false);

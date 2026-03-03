@@ -5,17 +5,18 @@ const CategoryForm = ({ onSuccess }) => {
   const [title, setTitle] = useState("");
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const fileRef = useRef(null); // ✅ reset file input
+  const fileRef = useRef(null); // to reset file input after submit
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // basic validation
     if (!title.trim()) {
-      return alert("Category title is required");
+      return alert("please enter a category title");
     }
 
     if (!image) {
-      return alert("Please select an image");
+      return alert("please select an image");
     }
 
     try {
@@ -23,19 +24,19 @@ const CategoryForm = ({ onSuccess }) => {
 
       const formData = new FormData();
       formData.append("title", title);
-      formData.append("image", image); // MUST match upload.single("image")
+      formData.append("image", image); // this should match what backend expects
 
       await createCategory(formData);
 
-      // ✅ reset form
+      // reset everything after success
       setTitle("");
       setImage(null);
       if (fileRef.current) fileRef.current.value = "";
 
       onSuccess();
     } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || "Failed to create category");
+      console.log("error creating category:", err);
+      alert(err.response?.data?.message || "could not create category");
     } finally {
       setLoading(false);
     }
@@ -43,17 +44,17 @@ const CategoryForm = ({ onSuccess }) => {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow">
-      <h2 className="font-semibold mb-3">Add Category</h2>
+      <h2 className="font-semibold mb-3">add category</h2>
 
-      {/* TITLE */}
+      {/* title input */}
       <input
         className="border p-2 w-full mb-2"
-        placeholder="Category title"
+        placeholder="category title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
 
-      {/* IMAGE */}
+      {/* image upload */}
       <input
         ref={fileRef}
         type="file"
@@ -62,20 +63,20 @@ const CategoryForm = ({ onSuccess }) => {
         onChange={(e) => setImage(e.target.files[0])}
       />
 
-      {/* IMAGE PREVIEW */}
+      {/* show preview if image selected */}
       {image && (
         <img
           src={URL.createObjectURL(image)}
-          alt="Preview"
+          alt="preview"
           className="w-16 h-16 object-cover mb-2 rounded"
         />
       )}
 
       <button
         disabled={loading}
-        className="bg-black text-white px-4 py-2 rounded w-full"
+        className="bg-black text-white px-4 py-2 rounded w-full hover:bg-gray-800 transition-colors"
       >
-        {loading ? "Saving..." : "Add"}
+        {loading ? "saving..." : "add category"}
       </button>
     </form>
   );

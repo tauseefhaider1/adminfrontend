@@ -11,7 +11,7 @@ function AdminAddProduct({ onAdded }) {
     discount: "",
     stockStatus: "in",
     category: "",
-    topRated: false, // ✅ ADD TOP RATED
+    topRated: false, // for the top rated products section
   });
 
   const [imageFile, setImageFile] = useState(null);
@@ -19,6 +19,7 @@ function AdminAddProduct({ onAdded }) {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
+    // handle both text inputs and checkboxes
     setProduct((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -28,6 +29,7 @@ function AdminAddProduct({ onAdded }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // build form data for file upload
     const formData = new FormData();
     formData.append("name", product.name);
     formData.append("description", product.description);
@@ -37,7 +39,7 @@ function AdminAddProduct({ onAdded }) {
     formData.append("discount", Number(product.discount));
     formData.append("stockStatus", product.stockStatus);
     formData.append("category", product.category);
-    formData.append("topRated", product.topRated); // ✅ SEND TOP RATED
+    formData.append("topRated", product.topRated);
 
     if (imageFile) {
       formData.append("image", imageFile);
@@ -50,8 +52,9 @@ function AdminAddProduct({ onAdded }) {
         },
       });
 
-      alert("✅ Product added successfully");
+      alert("product added!");
 
+      // reset form after successful submission
       setProduct({
         name: "",
         description: "",
@@ -61,14 +64,18 @@ function AdminAddProduct({ onAdded }) {
         discount: "",
         stockStatus: "in",
         category: "",
-        topRated: false, // ✅ reset
+        topRated: false,
       });
       setImageFile(null);
 
-      onAdded?.();
+      // let parent component know we added something
+      if (onAdded) {
+        onAdded();
+      }
     } catch (error) {
-      console.error(error.response?.data || error);
-      alert("❌ Failed to add product");
+      // show error message
+      console.log("error adding product:", error.response?.data || error);
+      alert("something went wrong, try again");
     }
   };
 
@@ -79,7 +86,7 @@ function AdminAddProduct({ onAdded }) {
         placeholder="Product Name"
         value={product.name}
         onChange={handleChange}
-        className="w-full p-2"
+        className="w-full p-2 border rounded"
         required
       />
 
@@ -96,7 +103,7 @@ function AdminAddProduct({ onAdded }) {
         placeholder="Product Description"
         value={product.description}
         onChange={handleChange}
-        className="w-full p-2"
+        className="w-full p-2 border rounded"
         rows={4}
       />
 
@@ -104,7 +111,7 @@ function AdminAddProduct({ onAdded }) {
         name="category"
         value={product.category}
         onChange={handleChange}
-        className="w-full p-2"
+        className="w-full p-2 border rounded"
         required
       >
         <option value="">Select Category</option>
@@ -115,67 +122,75 @@ function AdminAddProduct({ onAdded }) {
         <option value="books">Books</option>
       </select>
 
-      <input
-        name="price"
-        type="number"
-        placeholder="Price"
-        value={product.price}
-        onChange={handleChange}
-        className="w-full p-2"
-        required
-      />
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          name="price"
+          type="number"
+          placeholder="Price"
+          value={product.price}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+          required
+        />
 
-      <input
-        name="originalPrice"
-        type="number"
-        placeholder="Original Price"
-        value={product.originalPrice}
-        onChange={handleChange}
-        className="w-full p-2"
-      />
+        <input
+          name="originalPrice"
+          type="number"
+          placeholder="Original Price"
+          value={product.originalPrice}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
+      </div>
 
-      <input
-        name="rating"
-        type="number"
-        step="0.1"
-        placeholder="Rating"
-        value={product.rating}
-        onChange={handleChange}
-        className="w-full p-2"
-      />
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          name="rating"
+          type="number"
+          step="0.1"
+          placeholder="Rating (0-5)"
+          value={product.rating}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
 
-      <input
-        name="discount"
-        type="number"
-        placeholder="Discount %"
-        value={product.discount}
-        onChange={handleChange}
-        className="w-full p-2"
-      />
+        <input
+          name="discount"
+          type="number"
+          placeholder="Discount %"
+          value={product.discount}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
+      </div>
 
-      {/* ✅ TOP RATED CHECKBOX */}
+      {/* top rated checkbox */}
       <label className="flex items-center gap-2">
         <input
           type="checkbox"
           name="topRated"
           checked={product.topRated}
           onChange={handleChange}
+          className="w-4 h-4"
         />
-        Top Rated
+        <span>Mark as Top Rated</span>
       </label>
 
       <select
         name="stockStatus"
         value={product.stockStatus}
         onChange={handleChange}
-        className="w-full p-2"
+        className="w-full p-2 border rounded"
       >
         <option value="in">In Stock</option>
         <option value="limited">Limited Stock</option>
         <option value="out">Out of Stock</option>
       </select>
 
-      <button className="bg-blue-600 text-white px-4 py-2 rounded">
+      <button 
+        type="submit" 
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
         Add Product
       </button>
     </form>

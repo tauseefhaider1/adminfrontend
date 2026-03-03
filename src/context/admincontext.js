@@ -7,18 +7,18 @@ export const AdminAuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for admin key on mount
+    // check if admin key exists in storage when component mounts
     const checkAdminStatus = () => {
       const adminKey = localStorage.getItem("admin_key");
-      console.log("Checking admin key:", !!adminKey);
+      console.log("admin key present:", adminKey ? "yes" : "no");
       setIsAdmin(!!adminKey);
       setIsLoading(false);
     };
 
-    // Small delay to ensure localStorage is ready
+    // small delay just to be safe
     const timer = setTimeout(checkAdminStatus, 100);
     return () => clearTimeout(timer);
-  }, []); // Empty dependency array - runs once
+  }, []); // only run once
 
   const loginWithKey = (key) => {
     if (key && key.trim()) {

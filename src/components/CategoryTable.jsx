@@ -2,14 +2,16 @@ import { deleteCategory } from "../services/categoryservice";
 
 const CategoryTable = ({ categories = [], onRefresh }) => {
   const handleDelete = async (id) => {
-    const ok = window.confirm("Delete this category?");
-    if (!ok) return;
+    // ask for confirmation first
+    const confirmDelete = window.confirm("are you sure you want to delete this category?");
+    if (!confirmDelete) return;
 
     try {
       await deleteCategory(id);
-      onRefresh();
+      onRefresh(); // reload the list
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete category");
+      console.log("delete error:", err);
+      alert(err.response?.data?.message || "could not delete category");
     }
   };
 
@@ -17,9 +19,9 @@ const CategoryTable = ({ categories = [], onRefresh }) => {
     <table className="w-full mt-4 border">
       <thead>
         <tr className="border-b">
-          <th className="p-2">Image</th>
-          <th className="p-2">Title</th>
-          <th className="p-2">Action</th>
+          <th className="p-2">image</th>
+          <th className="p-2">title</th>
+          <th className="p-2">actions</th>
         </tr>
       </thead>
 
@@ -27,23 +29,26 @@ const CategoryTable = ({ categories = [], onRefresh }) => {
         {categories.length === 0 ? (
           <tr>
             <td colSpan="3" className="p-4 text-center text-gray-500">
-              No categories found
+              no categories found
             </td>
           </tr>
         ) : (
           categories.map((cat) => (
-            <tr key={cat._id} className="border-t text-center">
+            <tr key={cat._id} className="border-t text-center hover:bg-gray-50">
               <td className="p-2">
                 <img
-  src={
-    cat.img && cat.img.startsWith("/uploads")
-      ? `${import.meta.env.VITE_API_URL}${cat.img}`
-      : "/placeholder.png"
-  }
-  alt={cat.title}
-  className="w-10 h-10 mx-auto object-cover rounded border"
-/>
-
+                  src={
+                    cat.img && cat.img.startsWith("/uploads")
+                      ? `${import.meta.env.VITE_API_URL}${cat.img}`
+                      : "/placeholder.png"
+                  }
+                  alt={cat.title}
+                  className="w-10 h-10 mx-auto object-cover rounded border"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/placeholder.png";
+                  }}
+                />
               </td>
 
               <td className="p-2">{cat.title}</td>
@@ -51,9 +56,9 @@ const CategoryTable = ({ categories = [], onRefresh }) => {
               <td className="p-2">
                 <button
                   onClick={() => handleDelete(cat._id)}
-                  className="text-red-500 hover:underline"
+                  className="text-red-500 hover:text-red-700 hover:underline transition-colors"
                 >
-                  Delete
+                  delete
                 </button>
               </td>
             </tr>

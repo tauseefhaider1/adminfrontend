@@ -19,7 +19,7 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      // Add admin key to headers
+      // add admin key to headers
       const response = await api.get("/api/users/admin", {
         headers: {
           'x-admin-key': process.env.REACT_APP_ADMIN_KEY
@@ -32,8 +32,8 @@ export default function AdminUsers() {
         setError(response.data.message);
       }
     } catch (err) {
-      console.error("Error fetching users:", err);
-      setError("Failed to load users.");
+      console.log("error fetching users:", err);
+      setError("could not load users.");
     } finally {
       setLoading(false);
     }
@@ -52,12 +52,13 @@ export default function AdminUsers() {
         setSelectedUser(userId);
       }
     } catch (err) {
-      console.error("Error fetching user orders:", err);
-      alert("Failed to load user orders");
+      console.log("error fetching user orders:", err);
+      alert("failed to load user orders");
     }
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -79,13 +80,13 @@ export default function AdminUsers() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <h2 className="text-2xl font-bold text-red-600 mb-4">oops!</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => window.history.back()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Go Back
+            go back
           </button>
         </div>
       </div>
@@ -96,14 +97,14 @@ export default function AdminUsers() {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Users Management</h1>
+          <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
           <div className="text-sm text-gray-600">
-            Total Users: <span className="font-bold">{users.length}</span>
+            total users: <span className="font-bold">{users.length}</span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Users List */}
+          {/* users list */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-md">
               <div className="overflow-x-auto">
@@ -111,19 +112,19 @@ export default function AdminUsers() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        User
+                        user
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Email
+                        email
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Joined
+                        joined
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Orders
+                        orders
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Actions
+                        actions
                       </th>
                     </tr>
                   </thead>
@@ -137,10 +138,10 @@ export default function AdminUsers() {
                             </div>
                             <div className="ml-4">
                               <p className="text-sm font-medium text-gray-900">
-                                {userItem.name || "No Name"}
+                                {userItem.name || "no name"}
                               </p>
                               <p className="text-sm text-gray-500">
-                                ID: {userItem._id.substring(0, 8)}...
+                                id: {userItem._id.substring(0, 8)}...
                               </p>
                             </div>
                           </div>
@@ -170,9 +171,9 @@ export default function AdminUsers() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <button
                             onClick={() => fetchUserOrders(userItem._id)}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors"
                           >
-                            View Orders
+                            view orders
                           </button>
                         </td>
                       </tr>
@@ -183,22 +184,22 @@ export default function AdminUsers() {
             </div>
           </div>
 
-          {/* User Orders Sidebar */}
+          {/* user orders sidebar */}
           <div>
             <div className="bg-white rounded-xl shadow-md p-6 sticky top-6">
               <h2 className="text-xl font-bold text-gray-800 mb-6">
-                {selectedUser ? "User Orders" : "Select a User"}
+                {selectedUser ? "user orders" : "select a user"}
               </h2>
               
               {selectedUser ? (
                 userOrders.length > 0 ? (
                   <div className="space-y-4">
                     {userOrders.map((order) => (
-                      <div key={order._id} className="border border-gray-200 rounded-lg p-4">
+                      <div key={order._id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <p className="font-medium text-gray-900">
-                              Order #{order._id.substring(0, 8)}
+                              order #{order._id.substring(0, 8)}
                             </p>
                             <p className="text-sm text-gray-500">
                               {formatDate(order.createdAt)}
@@ -213,10 +214,10 @@ export default function AdminUsers() {
                           </span>
                         </div>
                         <div className="text-sm text-gray-600">
-                          Items: {order.items?.length || 0}
+                          items: {order.items?.length || 0}
                         </div>
                         <div className="text-sm font-medium text-gray-900 mt-2">
-                          Total: ${order.totalAmount?.toFixed(2)}
+                          total: ₹{order.totalAmount?.toFixed(2)}
                         </div>
                       </div>
                     ))}
@@ -224,13 +225,13 @@ export default function AdminUsers() {
                 ) : (
                   <div className="text-center py-8">
                     <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">No orders found for this user</p>
+                    <p className="text-gray-500">no orders for this user</p>
                   </div>
                 )
               ) : (
                 <div className="text-center py-8">
                   <People className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Click on a user to view their orders</p>
+                  <p className="text-gray-500">click a user to see their orders</p>
                 </div>
               )}
             </div>
